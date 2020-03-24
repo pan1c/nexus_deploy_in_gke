@@ -68,7 +68,7 @@ fi
 #If no account - create account
 if gcloud iam service-accounts list | grep -E "${SERVICE_ACCOUNT}";
 then
-    echo "Account_exist. Nice"
+    echo "Account exists. Nice"
 else
     create_service_account;
 fi
@@ -85,20 +85,29 @@ if ! gcloud container clusters list | grep -qoE "^${CLUSTERNAME} "
 then
     gcloud container clusters create ${CLUSTERNAME}
 else
-echo "Cluster $CLUSTERNAME exists. Nice!"
+    echo "Cluster $CLUSTERNAME exists. Nice!"
 fi;
 
-echo "Add secrets from $KEY_FILE"
-kubectl create secret generic nexus-blobstore --from-file /home/panic/.nexus-blobstore/nexus-blobstore.json
+if ! kubectl get secrets | grep -qoE "^nexus-blobstore "
+then
+    echo "Add secrets from $KEY_FILE"
+    kubectl create secret generic nexus-blobstore --from-file /home/panic/.nexus-blobstore/nexus-blobstore.json
+else
+    echo "Secret (nexus-blobstore) exists. Nice!"
+fi
 
-#wget https://raw.githubusercontent.com/sonatype-nexus-community/nexus-blobstore-google-cloud/master/docker-compose.yml
-
+#Build image
 echo "Download new Dockerfile"
 [[ ! -f "Dockerfile" ]] && wget https://raw.githubusercontent.com/sonatype-nexus-community/nexus-blobstore-google-cloud/master/Dockerfile -O Dockerfile
 
 gcloud builds list
 echo "Build new image from Dockerfile"
 docker build . --tag gcr.io/${PROJECT_ID}/nexus3
+
 #Same in goole
-#gcloud builds submit --tag gcr.io/test1dfsfds/nexus3
+#gcloud builds submit --tag gcr.io/{$PROJECT_ID}/nexus3
+
+#Deploy in k8s
+
 apply_in_k8s;
+
