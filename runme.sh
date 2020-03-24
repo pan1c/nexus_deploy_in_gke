@@ -33,9 +33,15 @@ function create_service_account
 function apply_in_k8s 
 {
     echo "Kubectl apply:"
-    kubectl apply -f nexus3-data-persistentvolumeclaim.yaml
-    kubectl apply -f nexus3-deployment.yaml
-    kubectl apply -f nexus3-service.yaml
+    kubectl apply -f nexus-data-persistentvolumeclaim.yaml
+    kubectl apply -f nexus-deployment.yaml
+    kubectl apply -f nexus-service.yaml
+}
+
+function prepare_k8s_files
+{
+    echo "Edit deployment file to setup correct project_id"
+    sed "s/{{PROJECT_ID}}/${PROJECT_ID}/g" -i nexus-deployment.yaml
 }
 
 
@@ -108,6 +114,7 @@ docker build . --tag gcr.io/${PROJECT_ID}/nexus3
 #gcloud builds submit --tag gcr.io/{$PROJECT_ID}/nexus3
 
 #Deploy in k8s
+prepare_k8s_files;
 
 apply_in_k8s;
 
