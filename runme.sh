@@ -27,21 +27,20 @@ function create_service_account
     echo "Creating service account"
     gcloud iam service-accounts create ${SERVICE_ACC}  --display-name "Service account for ${SERVICE_ACC}"
     gcloud projects add-iam-policy-binding ${PROJECT_ID} --member serviceAccount:${SERVICE_ACCOUNT} --role roles/datastore.owner
-    gcloud projects add-iam-policy-binding ${PROJECT_ID} --member serviceAccount:${SERVICE_ACCOUNT} --role roles/storage.objectCreator
+    gcloud projects add-iam-policy-binding ${PROJECT_ID} --member serviceAccount:${SERVICE_ACCOUNT} --role roles/storage.objectAdmin
+    gcloud projects add-iam-policy-binding ${PROJECT_ID} --member serviceAccount:${SERVICE_ACCOUNT} --role roles/storage.buckets.create
 }
 
 function apply_in_k8s 
 {
     echo "Kubectl apply:"
-    kubectl apply -f nexus-data-persistentvolumeclaim.yaml
-    kubectl apply -f nexus-deployment.yaml
-    kubectl apply -f nexus-service.yaml
+    kubectl apply -f $(dirname "$0")/k8s -R
 }
 
 function prepare_k8s_files
 {
     echo "Edit deployment file to setup correct project_id"
-    sed "s/{{PROJECT_ID}}/${PROJECT_ID}/g" -i nexus-deployment.yaml
+    sed "s/{{PROJECT_ID}}/${PROJECT_ID}/g" -i $(dirname "$0")/k8s/*
 }
 
 
@@ -59,7 +58,7 @@ fi
 #Is PROJECT_ID set?
 if [[ -z $PROJECT_ID ]];
 then 
-    echo "please specify google project id like PROJECT_ID=test1dfsfds ./$0"
+    echo "please specify google project id like PROJECT_ID=test1dfsfds $0"
     exit
 fi
 
