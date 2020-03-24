@@ -1,0 +1,39 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: nexus
+  labels:
+    app: nexus
+spec:
+  replicas: 1
+  selector:
+      matchLabels:
+        app: nexus
+  template:
+    metadata:
+      labels:
+        app: nexus
+    spec:
+      securityContext:
+        fsGroup: 200
+      containers:
+      - image: gcr.io/{{PROJECT_ID}}/nexus3:latest
+        name: nexus
+        env:
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          value: /run/secrets/google_application_credentials/nexus-blobstore.json
+        ports:
+        - containerPort: 8081
+        volumeMounts:
+          - name: nexus-data-volume
+            mountPath: /nexus-data
+          - name: nexus-blobstore
+            mountPath: /run/secrets/google_application_credentials
+            readOnly: true
+      volumes:
+        - name: nexus-data-volume
+          persistentVolumeClaim:
+            claimName: nexus-dataclaim
+        - name: nexus-blobstore
+          secret:
+            secretName: nexus-blobstore
