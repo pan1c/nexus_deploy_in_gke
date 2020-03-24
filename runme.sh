@@ -27,8 +27,7 @@ function create_service_account
     echo "Creating service account"
     gcloud iam service-accounts create ${SERVICE_ACC}  --display-name "Service account for ${SERVICE_ACC}"
     gcloud projects add-iam-policy-binding ${PROJECT_ID} --member serviceAccount:${SERVICE_ACCOUNT} --role roles/datastore.owner
-    gcloud projects add-iam-policy-binding ${PROJECT_ID} --member serviceAccount:${SERVICE_ACCOUNT} --role roles/storage.objectAdmin
-    gcloud projects add-iam-policy-binding ${PROJECT_ID} --member serviceAccount:${SERVICE_ACCOUNT} --role roles/storage.buckets.create
+    gcloud projects add-iam-policy-binding ${PROJECT_ID} --member serviceAccount:${SERVICE_ACCOUNT} --role roles/storage.admin
 }
 
 function apply_in_k8s 
