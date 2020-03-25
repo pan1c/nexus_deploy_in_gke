@@ -77,7 +77,7 @@ else
     create_service_account;
 fi
 
-#Create and save KEY_FILE for service account of needed
+#Create and save KEY_FILE for service account if needed
 if ! [ -f "$KEY_FILE" ];
 then
     gcloud iam service-accounts keys create $KEY_FILE --iam-account=${SERVICE_ACCOUNT}
@@ -85,6 +85,7 @@ else
     echo "Keyfile ( $KEY_FILE ) exists. Nice!"
 fi
 
+#Create k8s cluster if needed
 if ! gcloud container clusters list | grep -qoE "^${CLUSTERNAME} "
 then
     gcloud container clusters create ${CLUSTERNAME}
@@ -92,6 +93,7 @@ else
     echo "Cluster $CLUSTERNAME exists. Nice!"
 fi;
 
+#Add secrets if needed
 if ! kubectl get secrets | grep -qoE "^nexus-blobstore "
 then
     echo "Add secrets from $KEY_FILE"
@@ -101,14 +103,16 @@ else
 fi
 
 #Build image
-echo "Download new Dockerfile"
+
+#Download new Dockerfile if needed
+echo "Will use existing Dockerfile, if you want to use new Dockerfile from sonatype-nexus-community - please delete existing"
 [[ ! -f "Dockerfile" ]] && wget https://raw.githubusercontent.com/sonatype-nexus-community/nexus-blobstore-google-cloud/master/Dockerfile -O Dockerfile
 
-gcloud builds list
+#Build image using local docker
 echo "Build new image from Dockerfile"
 docker build . --tag gcr.io/${PROJECT_ID}/nexus3
 
-#Same in goole
+#Uncomment it to build image using google cloud builds
 #gcloud builds submit --tag gcr.io/{$PROJECT_ID}/nexus3
 
 #Deploy in k8s
