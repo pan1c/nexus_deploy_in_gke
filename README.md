@@ -9,7 +9,6 @@ Prerequisites
 ----------
 
 - Clone repo
-- Install docker-ce, or change script to use google cloud build
 - Install gcloud tools
 - Run gcloud init
 

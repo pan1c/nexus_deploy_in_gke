@@ -51,7 +51,8 @@ function apply_in_k8s
 function prepare_k8s_files
 {
     echo "Edit deployment file to setup correct project_id"
-    sed "s/{{PROJECT_ID}}/${PROJECT_ID}/g" -i $(dirname "$0")/k8s/*
+    cp -f $(dirname "$0")/k8s/nexus-deployment.yaml.template $(dirname "$0")/k8s/nexus-deployment.yaml
+    sed "s/{{PROJECT_ID}}/${PROJECT_ID}/g" -i $(dirname "$0")/k8s/nexus-deployment.yaml
 }
 
 
@@ -117,12 +118,8 @@ fi
 echo "Will use existing Dockerfile, if you want to use new Dockerfile from sonatype-nexus-community - please delete existing"
 [[ ! -f "Dockerfile" ]] && wget https://raw.githubusercontent.com/sonatype-nexus-community/nexus-blobstore-google-cloud/master/Dockerfile -O Dockerfile
 
-#Build image using local docker
-echo "Build new image from Dockerfile"
-docker build . --tag gcr.io/${PROJECT_ID}/nexus3
-
-#Uncomment it to build image using google cloud builds
-#gcloud builds submit --tag gcr.io/{$PROJECT_ID}/nexus3
+echo "Build new image from Dockerfile using google builds"
+gcloud builds submit --tag gcr.io/${PROJECT_ID}/nexus3
 
 #Deploy in k8s
 prepare_k8s_files;
