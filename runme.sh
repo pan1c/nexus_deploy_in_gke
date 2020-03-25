@@ -30,6 +30,16 @@ function create_service_account
     gcloud projects add-iam-policy-binding ${PROJECT_ID} --member serviceAccount:${SERVICE_ACCOUNT} --role roles/storage.admin
 }
 
+function create_and_add_secrets
+{
+    echo "Store secret key"
+    gcloud iam service-accounts keys create $KEY_FILE --iam-account=${SERVICE_ACCOUNT}
+    echo "Add secrets from $KEY_FILE"
+    kubectl create secret generic nexus-blobstore --from-file /home/panic/.nexus-blobstore/nexus-blobstore.json
+    rm -f $KEY_FILE
+}
+
+
 function apply_in_k8s 
 {
     echo "Kubectl apply:"
@@ -77,14 +87,6 @@ else
     create_service_account;
 fi
 
-#Create and save KEY_FILE for service account if needed
-if ! [ -f "$KEY_FILE" ];
-then
-    gcloud iam service-accounts keys create $KEY_FILE --iam-account=${SERVICE_ACCOUNT}
-else
-    echo "Keyfile ( $KEY_FILE ) exists. Nice!"
-fi
-
 #Create k8s cluster if needed
 if ! gcloud container clusters list | grep -qoE "^${CLUSTERNAME} "
 then
@@ -96,8 +98,9 @@ fi;
 #Add secrets if needed
 if ! kubectl get secrets | grep -qoE "^nexus-blobstore "
 then
-    echo "Add secrets from $KEY_FILE"
-    kubectl create secret generic nexus-blobstore --from-file /home/panic/.nexus-blobstore/nexus-blobstore.json
+
+create_and_add_secrets;
+
 else
     echo "Secret (nexus-blobstore) exists. Nice!"
 fi
