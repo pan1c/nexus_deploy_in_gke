@@ -7,8 +7,7 @@ KEY_FOLDER=$HOME/.nexus-blobstore
 KEY_FILE=${KEY_FOLDER}/${SERVICE_ACC}.json
 
 CLUSTERNAME="nexus-cluster"
-
-DEFAULTZONE="europe-west1-b"
+DEFAULTZONE="europe-west4-c"
 
 function prepare_project
 {
@@ -75,12 +74,13 @@ then
 fi
 
 #If no project - create and prepare project
-if gcloud projects list | grep -qoE "^$PROJECT_ID ";
+if ! gcloud projects list | grep -qoE "^$PROJECT_ID ";
 then
-    gcloud config set project "$PROJECT_ID" && echo "Switched to $PROJECT_ID" || exit 1
-else
     prepare_project;
 fi
+
+#Switch to the project
+gcloud config set project "$PROJECT_ID" && echo "Switched to $PROJECT_ID" || exit 1
 
 #set zone if needed
 ZONE=$(gcloud config get-value zone) ;
@@ -102,6 +102,9 @@ else
     echo "Cluster $CLUSTERNAME exists. Nice!"
 fi;
 
+echo get kubectl credentials for cluster
+gcloud container clusters get-credentials ${CLUSTERNAME} --zone=${ZONE}
+
 #Add secrets if needed
 if ! kubectl get secrets | grep -qoE "^nexus-blobstore "
 then
@@ -112,11 +115,13 @@ else
     echo "Secret (nexus-blobstore) exists. Nice!"
 fi
 
-#Build image
-
 #Download new Dockerfile if needed
 echo "Will use existing Dockerfile, if you want to use new Dockerfile from sonatype-nexus-community - please delete existing"
 [[ ! -f "Dockerfile" ]] && wget https://raw.githubusercontent.com/sonatype-nexus-community/nexus-blobstore-google-cloud/master/Dockerfile -O Dockerfile
+
+#echo "Build new image from Dockerfile"
+#docker build . --tag gcr.io/${PROJECT_ID}/nexus3
+#
 
 echo "Build new image from Dockerfile using google builds"
 gcloud builds submit --tag gcr.io/${PROJECT_ID}/nexus3
