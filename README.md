@@ -9,7 +9,7 @@ To do that:
 - Install docker-ce, or change script to use google cloud build
 - Install gcloud tools
 - Run gcloud init
-- As described ["here](https://cloud.google.com/storage/docs/authentication?hl=en#service_accounts):
+- As described [here](https://github.com/sonatype-nexus-community/nexus-blobstore-google-cloud):
 Firestore usage is exclusively in Datastore mode; you must configure the project for your Repository Manager deployment
 to use ["Firestore in Datastore mode"](https://cloud.google.com/firestore/docs/firestore-or-datastore). You should do it via google cloud web interface manually.
 
