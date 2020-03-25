@@ -1,4 +1,4 @@
-PROJECT_SERVICES="storage-component.googleapis.com firebasestorage.googleapis.com container.googleapis.com iam.googleapis.com iamcredentials.googleapis.com datastore.googleapis.com cloudbuild.googleapis.com"
+PROJECT_SERVICES="cloudapis.googleapis.com storage-component.googleapis.com firebasestorage.googleapis.com container.googleapis.com iam.googleapis.com iamcredentials.googleapis.com datastore.googleapis.com cloudbuild.googleapis.com"
 
 SERVICE_ACC="nexus-blobstore"
 SERVICE_ACCOUNT="${SERVICE_ACC}@${PROJECT_ID}.iam.gserviceaccount.com"
@@ -17,9 +17,10 @@ function prepare_project
     echo "Linking billing account"
     BILLING_ACC=`gcloud beta billing accounts list  --format='value(name)'`;
     gcloud beta billing projects link ${PROJECT_ID} --billing-account=${BILLING_ACC}
+    sleep 1
     echo "Enabling neccessary google services"
+    echo  "gcloud services enable $PROJECT_SERVICES;"
     gcloud services enable $PROJECT_SERVICES;
-
 }
 
 
@@ -97,7 +98,7 @@ fi
 #Create k8s cluster if needed
 if ! gcloud container clusters list | grep -qoE "^${CLUSTERNAME} "
 then
-    gcloud container clusters create ${CLUSTERNAME} --zone=${ZONE}
+    gcloud container clusters create ${CLUSTERNAME} --zone=${ZONE} || exit 1
 else
     echo "Cluster $CLUSTERNAME exists. Nice!"
 fi;
