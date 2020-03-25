@@ -22,6 +22,8 @@ This script is idempotent so you can run it more the one time.
 
 Postinstall
 ----------
- As described [here](https://github.com/sonatype-nexus-community/nexus-blobstore-google-cloud):
+- As described [here](https://github.com/sonatype-nexus-community/nexus-blobstore-google-cloud):
 Firestore usage is exclusively in Datastore mode; you must configure the project for your Repository Manager deployment
 to use ["Firestore in Datastore mode"](https://cloud.google.com/firestore/docs/firestore-or-datastore). You should do it via [google cloud web interface](https://console.cloud.google.com/firestore) manually after deployment.
+
+- Script will create new storage bucket with name: ${PROJECT_ID}-nexus-plugin-bucket please use it as Google Cloud Bucket Name in plugin configuration.

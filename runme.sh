@@ -131,3 +131,6 @@ prepare_k8s_files;
 
 apply_in_k8s;
 
+echo "This will create new bucket: $PROJECT_ID-nexus-plugin"
+echo "Please use it in plugin configuration"
+gsutil mb gs://${PROJECT_ID}-nexus-plugin-bucket/
