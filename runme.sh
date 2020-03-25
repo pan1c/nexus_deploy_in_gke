@@ -9,6 +9,25 @@ KEY_FILE=${KEY_FOLDER}/${SERVICE_ACC}.json
 CLUSTERNAME="nexus-cluster"
 DEFAULTZONE="europe-west4-c"
 
+
+function init_checks
+{
+#Is gcloud initilized?
+if [ ! -d $HOME/.config/gcloud/ ]; then
+    echo "Please do gcloud init before using this";
+    echo "gcloud init"
+    exit
+fi
+
+#Is PROJECT_ID set?
+if [[ -z $PROJECT_ID ]];
+then 
+    echo "please specify google project id like PROJECT_ID=test1dfsfds $0"
+    exit
+fi
+}
+
+
 function prepare_project
 {
     echo "First run initialization"
@@ -59,20 +78,8 @@ function prepare_k8s_files
 ################################################ START
 mkdir -p $KEY_FOLDER
 
+init_checks;
 
-#Is gcloud initilized?
-if [ ! -d $HOME/.config/gcloud/ ]; then
-    echo "Please do gcloud init before using this";
-    echo "gcloud init"
-    exit
-fi
-
-#Is PROJECT_ID set?
-if [[ -z $PROJECT_ID ]];
-then 
-    echo "please specify google project id like PROJECT_ID=test1dfsfds $0"
-    exit
-fi
 
 #If no project - create and prepare project
 if ! gcloud projects list | grep -qoE "^$PROJECT_ID ";
@@ -83,9 +90,9 @@ fi
 #Switch to the project
 gcloud config set project "$PROJECT_ID" && echo "Switched to $PROJECT_ID" || exit 1
 
-#set zone if needed
+#Set zone variable
 ZONE=$(gcloud config get-value zone) ;
-[[ -z $ZONE ]] && ZONE=$DEFAULTZONE
+[[ -z "$ZONE" ]] && ZONE=$DEFAULTZONE
 
 #If no account - create account
 if gcloud iam service-accounts list | grep -E "${SERVICE_ACCOUNT}";
@@ -103,15 +110,14 @@ else
     echo "Cluster $CLUSTERNAME exists. Nice!"
 fi;
 
+#We need to switch creds for kubectl
 echo get kubectl credentials for cluster
-gcloud container clusters get-credentials ${CLUSTERNAME} --zone=${ZONE}
+gcloud container clusters get-credentials ${CLUSTERNAME} --zone=${ZONE} || exit 1
 
 #Add secrets if needed
 if ! kubectl get secrets | grep -qoE "^nexus-blobstore "
 then
-
-create_and_add_secrets;
-
+    create_and_add_secrets;
 else
     echo "Secret (nexus-blobstore) exists. Nice!"
 fi
@@ -134,4 +140,7 @@ apply_in_k8s;
 
 echo "This will create new bucket: $PROJECT_ID-nexus-plugin"
 echo "Please use it in plugin configuration"
-gsutil mb gs://${PROJECT_ID}-nexus-plugin-bucket/
+if ! gsutil list | grep -q  "${PROJECT_ID}-nexus-plugin-bucket"
+then
+    gsutil mb gs://${PROJECT_ID}-nexus-plugin-bucket/
+fi
