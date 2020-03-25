@@ -19,3 +19,6 @@ Then run script as described:
 PROJECT_ID=test1dfsfds ./runme.sh
 ```
 Where PROJECT_ID is GCE project_id (existing\or not)
+
+This script is idempotent so you can run it more the one time.
+
