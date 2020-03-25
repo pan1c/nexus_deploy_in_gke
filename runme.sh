@@ -8,6 +8,8 @@ KEY_FILE=${KEY_FOLDER}/${SERVICE_ACC}.json
 
 CLUSTERNAME="nexus-cluster"
 
+DEFAULTZONE="europe-west1-b"
+
 function prepare_project
 {
     echo "First run initialization"
@@ -79,6 +81,10 @@ else
     prepare_project;
 fi
 
+#set zone if needed
+ZONE=$(gcloud config get-value zone) ;
+[[ -z $ZONE ]] && ZONE=$DEFAULTZONE
+
 #If no account - create account
 if gcloud iam service-accounts list | grep -E "${SERVICE_ACCOUNT}";
 then
@@ -90,7 +96,7 @@ fi
 #Create k8s cluster if needed
 if ! gcloud container clusters list | grep -qoE "^${CLUSTERNAME} "
 then
-    gcloud container clusters create ${CLUSTERNAME}
+    gcloud container clusters create ${CLUSTERNAME} --zone=${ZONE}
 else
     echo "Cluster $CLUSTERNAME exists. Nice!"
 fi;
